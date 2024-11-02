@@ -39,9 +39,13 @@ def update_one_task(task_id):
     request_body = request.get_json()
     task.title = request_body["title"]
     task.description = request_body["description"]
-    
     db.session.commit()
-    return Response(status=204, mimetype="application/json")
+    
+    response_body = {"task": task.task_dict()}
+    
+    return make_response(response_body, 200)
+    
+
 
     
 def validate_task(task_id):
