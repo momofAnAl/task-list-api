@@ -44,8 +44,17 @@ def update_one_task(task_id):
     response_body = {"task": task.task_dict()}
     
     return make_response(response_body, 200)
-    
 
+@task_bp.delete("/<task_id>")
+def delete_one_task(task_id):
+    task = validate_task(task_id)
+    
+    db.session.delete(task)
+    db.session.commit()
+    
+    response_body = {"details": f'Task {task_id} "{task.title}" successfully deleted'}
+    
+    return response_body
 
     
 def validate_task(task_id):
