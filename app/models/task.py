@@ -10,13 +10,10 @@ class Task(db.Model):
     completed_at: Mapped[datetime] = mapped_column(nullable=True)
 
     def task_dict(self):
-        complete_at_null = False
-        if self.completed_at:
-            complete_at_null = True
         
         return dict(
             id=self.id,
             title=self.title,
             description=self.description,
-            is_complete = complete_at_null   
+            is_complete = bool(self.completed_at)
         )
