@@ -2,10 +2,12 @@ from flask import Blueprint, abort, make_response, request, Response
 from app.models.task import Task
 from app.db import db
 from datetime import datetime
+import os
+import requests
 
-task_bp = Blueprint("task_bp", __name__, url_prefix="/tasks")
+bp = Blueprint("task_bp", __name__, url_prefix="/tasks")
 
-@task_bp.post("")
+@bp.post("")
 def create_task():
     request_body = request.get_json()
     if "title" not in request_body or "description" not in request_body:
@@ -22,14 +24,14 @@ def create_task():
     response = {"task": new_task.task_dict()}
     return response, 201
 
-@task_bp.get("/<task_id>")
+@bp.get("/<task_id>")
 def get_one_task(task_id):
     task = validate_task(task_id)
     
     response_body = {"task": task.task_dict()}
     return response_body
 
-@task_bp.get("")
+@bp.get("")
 def get_all_tasks():
     #select * from task order by title asc;
     query = db.select(Task)
@@ -47,7 +49,7 @@ def get_all_tasks():
     return response_body
 
 
-@task_bp.put("/<task_id>")
+@bp.put("/<task_id>")
 def update_one_task(task_id):
     task = validate_task(task_id)
     
@@ -60,18 +62,30 @@ def update_one_task(task_id):
     
     return make_response(response_body, 200)
 
-@task_bp.patch("/<task_id>/mark_complete")
+@bp.patch("/<task_id>/mark_complete")
 def update_completed_task(task_id):
     task = validate_task(task_id)
     
     task.completed_at = datetime.now()
     db.session.commit()
     
-    response_body = {"task": task.task_dict()}
-    
-    return make_response(response_body, 200)
+    request_url = os.environ.get('SLACK_CHAT_URL')
+    slack_bot_token = os.environ.get('SLACK_TOKEN')
+    slack_channel_id = os.environ.get('SLACK_CHANNEL_ID')
+    headers = {"Authorization": f"Bearer {slack_bot_token}"}
+    payload = {
+                "channel": f"{slack_channel_id}",
+                "text": f"Someone just completed the task '{task.title}'"
+            }
 
-@task_bp.patch("/<task_id>/mark_incomplete")
+    response = requests.post(request_url, headers=headers, json=payload)
+    
+    if response:
+        response_body = {"task": task.task_dict()}
+        return make_response(response_body, 200)
+    
+    
+@bp.patch("/<task_id>/mark_incomplete")
 def update_not_completed_task(task_id):
     task = validate_task(task_id)
     
@@ -82,7 +96,7 @@ def update_not_completed_task(task_id):
     
     return make_response(response_body, 200)
 
-@task_bp.delete("/<task_id>")
+@bp.delete("/<task_id>")
 def delete_one_task(task_id):
     task = validate_task(task_id)
     
