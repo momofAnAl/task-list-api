@@ -31,6 +31,8 @@ def get_one_task(task_id):
     response_body = {"task": task.task_dict()}
     return response_body
 
+#create new route /goals/<goal_id>/tasks
+
 @bp.get("")
 def get_all_tasks():
     #select * from task order by title asc;
@@ -72,6 +74,7 @@ def update_completed_task(task_id):
     request_url = os.environ.get('SLACK_CHAT_URL')
     slack_bot_token = os.environ.get('SLACK_TOKEN')
     slack_channel_id = os.environ.get('SLACK_CHANNEL_ID')
+    
     headers = {"Authorization": f"Bearer {slack_bot_token}"}
     payload = {
                 "channel": f"{slack_channel_id}",

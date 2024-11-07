@@ -20,13 +20,22 @@ def create_goal():
     response_body = {"goal": new_goal.goal_dict()}
     return response_body, 201
 
-
 @bp.get("")
 def get_all_saved_goals():
     query = db.select(Goal).order_by(Goal.id)
     goals = db.session.scalars(query)
     
     response_body = [goal.goal_dict() for goal in goals]
+    return response_body
+
+@bp.get("/<goal_id>")
+def get_one_goal(goal_id):
+    goal = validate_goal(goal_id)
+    
+    db.session.add(goal)
+    db.session.commit()
+
+    response_body = {"goal": goal.goal_dict()}
     return response_body
 
 @bp.put("/<goal_id>")
@@ -44,6 +53,14 @@ def update_one_goal(goal_id):
 
 @bp.delete("/<goal_id>")
 def delete_one_goal(goal_id):
+    goal = validate_goal(goal_id)
+    
+    db.session.delete(goal)
+    db.session.commit()
+    
+    response = {"details": f'Goal {goal_id} "{goal.title}" successfully deleted'}
+    return make_response(response, 200)
+    
     
 def validate_goal(goal_id):
     try:
