@@ -14,11 +14,10 @@ class Task(db.Model):
     goal: Mapped[Optional["Goal"]] = relationship(back_populates="tasks")
 
     def task_dict(self):
+        task_as_dict = {}
+        task_as_dict["id"] = self.id
+        task_as_dict["title"] = self.title
+        task_as_dict["description"] = self.description
+        task_as_dict["is_complete"] = bool(self.completed_at)
         
-        return dict(
-            id=self.id,
-            goal_id=self.goal_id,
-            title=self.title,
-            description=self.description,
-            is_complete = bool(self.completed_at)
-        )
+        return task_as_dict

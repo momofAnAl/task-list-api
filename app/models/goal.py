@@ -7,9 +7,9 @@ class Goal(db.Model):
     tasks: Mapped[list["Task"]] = relationship(back_populates="goal")
     
     def goal_dict(self):
-        return dict(
-            id=self.id,
-            title=self.title,
-            tasks=[task.task_dict() for task in self.tasks]
-        )
+        goal_as_dict = {}
+        goal_as_dict["id"] = self.id
+        goal_as_dict["title"] = self.title
+        
+        return goal_as_dict
         
