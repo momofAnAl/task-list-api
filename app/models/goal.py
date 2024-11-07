@@ -9,7 +9,7 @@ class Goal(db.Model):
     def goal_dict(self):
         return dict(
             id=self.id,
-            title=self.title
+            title=self.title,
+            tasks=[task.task_dict() for task in self.tasks]
         )
         
-#Goal is gonna be a parent of task 

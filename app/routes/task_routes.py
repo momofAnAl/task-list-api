@@ -1,4 +1,5 @@
 from flask import Blueprint, abort, make_response, request, Response
+from app.routes.route_utilities import validate_model
 from app.models.task import Task
 from app.db import db
 from datetime import datetime
@@ -26,12 +27,10 @@ def create_task():
 
 @bp.get("/<task_id>")
 def get_one_task(task_id):
-    task = validate_task(task_id)
+    task = validate_model(Task, task_id)
     
     response_body = {"task": task.task_dict()}
     return response_body
-
-#create new route /goals/<goal_id>/tasks
 
 @bp.get("")
 def get_all_tasks():
@@ -53,7 +52,7 @@ def get_all_tasks():
 
 @bp.put("/<task_id>")
 def update_one_task(task_id):
-    task = validate_task(task_id)
+    task = validate_model(Task, task_id)
     
     request_body = request.get_json()
     task.title = request_body["title"]
@@ -66,7 +65,7 @@ def update_one_task(task_id):
 
 @bp.patch("/<task_id>/mark_complete")
 def update_completed_task(task_id):
-    task = validate_task(task_id)
+    task = validate_model(Task, task_id)
     
     task.completed_at = datetime.now()
     db.session.commit()
@@ -76,12 +75,12 @@ def update_completed_task(task_id):
     slack_channel_id = os.environ.get('SLACK_CHANNEL_ID')
     
     headers = {"Authorization": f"Bearer {slack_bot_token}"}
-    payload = {
+    raw_body = {
                 "channel": f"{slack_channel_id}",
                 "text": f"Someone just completed the task '{task.title}'"
             }
 
-    response = requests.post(request_url, headers=headers, json=payload)
+    response = requests.post(request_url, headers=headers, json=raw_body)
     
     if response:
         response_body = {"task": task.task_dict()}
@@ -90,7 +89,7 @@ def update_completed_task(task_id):
     
 @bp.patch("/<task_id>/mark_incomplete")
 def update_not_completed_task(task_id):
-    task = validate_task(task_id)
+    task = validate_model(Task, task_id)
     
     task.completed_at = None
     db.session.commit()
@@ -101,7 +100,7 @@ def update_not_completed_task(task_id):
 
 @bp.delete("/<task_id>")
 def delete_one_task(task_id):
-    task = validate_task(task_id)
+    task = validate_model(Task, task_id)
     
     db.session.delete(task)
     db.session.commit()
@@ -109,19 +108,3 @@ def delete_one_task(task_id):
     response_body = {"details": f'Task {task_id} "{task.title}" successfully deleted'}
     
     return response_body
-    
-def validate_task(task_id):
-    try:
-        task_id = int(task_id)
-    except:
-        response = {"message": f"Task {task_id} is not valid"}
-        abort(make_response(response, 400))  
-        
-    query = db.select(Task).where(Task.id == task_id)
-    task = db.session.scalar(query)
-    
-    if not task:
-        response = {"message": f"Task {task_id} is not found"}
-        abort(make_response(response, 404))
-    
-    return task
