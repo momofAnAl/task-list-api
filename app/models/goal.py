@@ -11,5 +11,10 @@ class Goal(db.Model):
         goal_as_dict["id"] = self.id
         goal_as_dict["title"] = self.title
         
+        # if self.tasks:
+        #     goal_as_dict["tasks"] = [task.task_dict() for task in self.tasks]
+        # else:
+        #     goal_as_dict["tasks"] = []
+        
         return goal_as_dict
         

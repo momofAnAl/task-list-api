@@ -47,7 +47,7 @@ def update_one_goal(goal_id):
     
     request_body = request.get_json()
     goal.title = request_body["title"]
-    db.session.commit()# db.session.add(title)
+    db.session.commit()
     
     response_body = {"goal": goal.goal_dict()}
     return make_response(response_body, 200)
@@ -70,21 +70,29 @@ def add_tasks_to_goal(goal_id):
     
     body_task_ids = []
     for task_id in task_ids:
-        task = Task.query.get(task_id)
+        task = validate_model(Task, task_id)
         if task:
             task.goal_id = goal_id
             body_task_ids.append(task_id)    
     
     db.session.commit()
+    
+    tasks_of_goal = [task.id for task in goal.tasks]
     response_body = {
         "id": goal.id,
-        "task_ids": body_task_ids
+        "task_ids": tasks_of_goal # return all tasks including previous tasks
     }
     return response_body
 
 @bp.get("/<goal_id>/tasks")
 def get_tasks_for_goal(goal_id):
-    goal = validate_model(goal_id)
+    goal = validate_model(Goal, goal_id)
     
+    response_body = dict(
+        id=goal.id,
+        title=goal.title,
+        tasks=[task.task_dict() for task in goal.tasks]
+    )
+    return response_body
     
     
